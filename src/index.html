@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.2.8/pdfobject.js"
+      integrity="sha512-aqpxRD4NwJUXN742KSiIr4zARkh+WTeaWwx0DYuy+9eARX/glcCFtHSeETrIc6V+1BwYfMwvPz5KWlVtRyXikQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <style>
+      .pdfobject-container { height: 30rem; border: 1rem solid rgba(0,0,0,.1); }
+      </style>
+    <script>
+      //   PDFObject.embed("../output_11.pdf", "#pdf");
+      document.addEventListener("DOMContentLoaded", function () {
+        var options = {
+          pdfOpenParams: {
+            pagemode: "thumbs",
+            navpanes: 0,
+            toolbar: 0,
+            statusbar: 0,
+            view: "FitV",
+          },
+        };
+
+        var myPDF = PDFObject.embed(
+          "../pdfs/output.pdf",
+          "#pdf",
+          options
+        );
+
+        var el = document.querySelector("#results");
+        el.setAttribute("class", myPDF ? "success" : "fail");
+        el.innerHTML = myPDF
+          ? "PDFObject successfully added an &lt;embed> element to the page!"
+          : "Uh-oh, the embed didn't work.";
+      });
+    </script>
+    <title>PHP View</title>
+  </head>
+  <body>
+    <div id="results" class="hidden"></div>
+    <div id="pdf"></div>
+  </body>
+</html>
