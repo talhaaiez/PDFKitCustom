@@ -1,7 +1,6 @@
-import { NONAME } from "dns";
-
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
+const blobStream = require("blob-stream");
 
 const DEFAULT_MARGIN = { top: 32, bottom: 32, left: 38, right: 38 };
 const DEFAULT_TEXT = {
@@ -19,7 +18,10 @@ const DEFAULT_IMAGE = {
   in_a_row: 4,
 };
 
+let BLOB: any = null;
+let STREAM: any = null;
 let DOCUMENT: any = null;
+let DOWNLOAD: boolean = false;
 let FONT = {
   normal: "Helvetica",
   bold: "Helvetica-Bold",
@@ -60,13 +62,20 @@ function disableSameLine() {
 function startDocument(
   output: string = "pdfs/output.pdf",
   size: string = "A4",
-  margins: object = DEFAULT_MARGIN
+  margins: object = DEFAULT_MARGIN,
+  download: boolean = false,
 ) {
   DOCUMENT = new PDFDocument({
     size: size,
     margins: margins,
   });
-  DOCUMENT.pipe(fs.createWriteStream(output));
+  
+  DOWNLOAD = download;
+  if(DOWNLOAD) {
+    STREAM = DOCUMENT.pipe(blobStream());
+  } else {
+    DOCUMENT.pipe(fs.createWriteStream(output));
+  }
 }
 
 function addPage(margins: object = DEFAULT_MARGIN, size: string = "A4") {
@@ -76,8 +85,15 @@ function addPage(margins: object = DEFAULT_MARGIN, size: string = "A4") {
   });
 }
 
-function endDocument() {
+function endDocument(filename: string = "output") {
   DOCUMENT.end();
+  if (DOWNLOAD) {
+    STREAM.on("finish", function () {
+      // get a blob you can do whatever you like with
+      BLOB = STREAM.toBlob("application/pdf");
+      exportpdf(filename);
+    });
+  }
 }
 
 function moveDown(amount: number) {
@@ -117,10 +133,9 @@ function text(value: string, options: any = {}) {
 }
 
 function line() {
-  DOCUMENT.moveTo(DOCUMENT.x, DOCUMENT.y).lineTo(
-    DOCUMENT.page.width - DOCUMENT.page.margins.right,
-    DOCUMENT.y
-  ).stroke();
+  DOCUMENT.moveTo(DOCUMENT.x, DOCUMENT.y)
+    .lineTo(DOCUMENT.page.width - DOCUMENT.page.margins.right, DOCUMENT.y)
+    .stroke();
 }
 
 function image(path: string, options: any = {}) {
@@ -219,6 +234,19 @@ function calculateX(align: string, width: number) {
       return DOCUMENT.page.width / 2 - width / 2;
       break;
   }
+}
+
+// PRIVATE FUNCTION
+function exportpdf(filename: string) {
+  if (!BLOB) return;
+  let url = window.URL.createObjectURL(BLOB);
+  let a = document.createElement("a");
+  document.body.appendChild(a);
+  a.setAttribute("style", "display: none");
+  a.href = url;
+  a.download = filename + ".pdf";
+  a.click();
+  window.URL.revokeObjectURL(url);
 }
 
 export {

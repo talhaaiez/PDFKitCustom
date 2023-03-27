@@ -16,7 +16,7 @@ server.get('/print/:name', async (request, reply) => {
   return params.name
 })
 
-server.listen(8000, (err, address) => {
+server.listen({port: 8000}, (err, address) => {
   if (err) {
     console.error(err)
     process.exit(1)
